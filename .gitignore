@@ -1,0 +1,43 @@
+# Python virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Private keys and credentials
+client_keys/
+certs/server-key.pem
+test/certs/untrusted-key.pem
+password_records.json
+*.key
+*.p12
+*.pfx
+
+# Environment variables and secrets
+.env
+.env.*
+
+# Runtime-generated files
+server_files/*
+downloads/*
+*.log
+
+# Preserve empty directories if needed
+!server_files/.gitkeep
+!downloads/.gitkeep
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
