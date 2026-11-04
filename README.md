@@ -102,67 +102,37 @@ control of its own private keys, separate from the server.
 
 ## Cryptographic Components
 
-  Purpose                           Mechanism
-  --------------------------------- ----------------------------
-  Client-server transport           TLS 1.2 or newer
-  Message/file-package encryption   AES-256-GCM
-  AES key wrapping                  RSA-3072 OAEP with SHA-256
-  Digital signatures                RSA-PSS with SHA-256
-  File integrity                    SHA-256
-  Password hashing                  PBKDF2-HMAC-SHA-256
-  Public-key verification           SHA-256 fingerprints
+| Purpose | Mechanism |
+|---|---|
+| Client-server transport | TLS 1.2 or newer |
+| Message/file-package encryption | AES-256-GCM |
+| AES key wrapping | RSA-3072 OAEP with SHA-256 |
+| Digital signatures | RSA-PSS with SHA-256 |
+| File integrity | SHA-256 |
+| Password hashing | PBKDF2-HMAC-SHA-256 |
+| Public-key verification | SHA-256 fingerprints |
 
 Each encrypted payload uses a fresh AES key and a 12-byte nonce.
 
 ## Project Structure
 
-  -----------------------------------------------------------------------
-  File / directory                    Purpose
-  ----------------------------------- -----------------------------------
-  `client.py`                         Client connection, authentication,
-                                      messaging, and file-transfer
-                                      operations
-
-  `server.py`                         Threaded TLS server,
-                                      authentication, message routing,
-                                      and file handling
-
-  `protocol.py`                       Shared application-protocol parsing
-                                      and message construction
-
-  `e2ee.py`                           AES-GCM encryption and RSA-OAEP key
-                                      wrapping
-
-  `key_manager.py`                    RSA encryption/signing key
-                                      generation and loading
-
-  `signature_utils.py`                Digital-signature generation and
-                                      verification
-
-  `trusted_keys.py`                   Locally pinned public-key
-                                      fingerprints
-
-  `setup_passwords.py`                Utility for creating salted
-                                      password records
-
-  `requirements.txt`                  Python dependency specification
-
-  `certs/`                            Server certificate and local server
-                                      private key
-
-  `client_keys/`                      Client private encryption/signing
-                                      keys (local only; do not commit)
-
-  `trusted_public_keys/`              Client public encryption/signing
-                                      keys
-
-  `test/`                             Test certificates and file-transfer
-                                      test data
-
-  `server_files/`                     Server-side uploaded-file storage
-
-  `downloads/`                        Client-side downloaded-file storage
-  -----------------------------------------------------------------------
+| File / directory | Purpose |
+|---|---|
+| `client.py` | Client connection, authentication, messaging, and file-transfer operations |
+| `server.py` | Threaded TLS server, authentication, message routing, and file handling |
+| `protocol.py` | Shared application-protocol parsing and message construction |
+| `e2ee.py` | AES-GCM encryption and RSA-OAEP key wrapping |
+| `key_manager.py` | RSA encryption/signing key generation and loading |
+| `signature_utils.py` | Digital-signature generation and verification |
+| `trusted_keys.py` | Locally pinned public-key fingerprints |
+| `setup_passwords.py` | Utility for creating salted password records |
+| `requirements.txt` | Python dependency specification |
+| `certs/` | Server certificate and local server private key (private key is generated locally; do not commit) |
+| `client_keys/` | Client private encryption/signing keys (generated locally; do not commit) |
+| `trusted_public_keys/` | Client public encryption/signing keys |
+| `test/` | Test certificates and file-transfer test data |
+| `server_files/` | Server-side uploaded-file storage |
+| `downloads/` | Client-side downloaded-file storage |
 
 ## Requirements
 
@@ -263,41 +233,22 @@ Multiple clients can connect concurrently.
 
 Control messages use a newline-terminated, pipe-separated format:
 
-``` text
+```text
 COMMAND|FIELD1|FIELD2|...
 ```
 
 All control messages are transmitted inside TLS.
 
-  ---------------------------------------------------------------------------
-  Operation               Command                     Description
-  ----------------------- --------------------------- -----------------------
-  Login                   `LOGIN|username|password`   Authenticate a user
-
-  List users              `LIST`                      List currently online
-                                                      users
-
-  Private message         `MSG|recipient|message`     Send an end-to-end
-                                                      encrypted private
-                                                      message
-
-  Broadcast               `BROADCAST|message`         Send an end-to-end
-                                                      encrypted message to
-                                                      online users
-
-  Upload                  `UPLOAD|filename`           Upload a file to the
-                                                      server
-
-  Download                `DOWNLOAD|filename`         Download a file from
-                                                      the server
-
-  Client-to-client        `SEND|recipient|filename`   Send an end-to-end
-  transfer                                            encrypted file through
-                                                      the server
-
-  Logout                  `LOGOUT`                    Log out the current
-                                                      user
-  ---------------------------------------------------------------------------
+| Operation | Command | Description |
+|---|---|---|
+| Login | `LOGIN|username|password` | Authenticate a user |
+| List users | `LIST` | List currently online users |
+| Private message | `MSG|recipient|message` | Send an end-to-end encrypted private message |
+| Broadcast | `BROADCAST|message` | Send an end-to-end encrypted message to online users |
+| Upload | `UPLOAD|filename` | Upload a file to the server |
+| Download | `DOWNLOAD|filename` | Download a file from the server |
+| Client-to-client transfer | `SEND|recipient|filename` | Send an end-to-end encrypted file through the server |
+| Logout | `LOGOUT` | Log out the current user |
 
 For `UPLOAD` and `SEND`, filenames are resolved relative to the client's
 current working directory. Downloaded files are saved in `downloads/`.
@@ -333,20 +284,13 @@ corrupted-upload rejection, and upload/download functionality.
 
 ## Performance Observations
 
-The following values were recorded from local client-to-client encrypted
-file transfers. They are single-run server-side observations, not
-averages or end-to-end client transfer benchmarks.
+The following values were recorded from local client-to-client encrypted file transfers. They are single-run server-side observations, not averages or end-to-end client transfer benchmarks.
 
-  -----------------------------------------------------------------------
-  Original file     Ciphertext size     Server elapsed           Reported
-  size                                            time         throughput
-  -------------- ------------------ ------------------ ------------------
-  100 KB              243,760 bytes         0.002241 s      103.715 MiB/s
-
-  1 MB              2,486,544 bytes         0.017858 s      132.791 MiB/s
-
-  10 MB            24,856,164 bytes         0.181399 s      130.677 MiB/s
-  -----------------------------------------------------------------------
+| Original file size | Ciphertext size | Server elapsed time | Reported throughput |
+|---:|---:|---:|---:|
+| 100 KB | 243,760 bytes | 0.002241 s | 103.715 MiB/s |
+| 1 MB | 2,486,544 bytes | 0.017858 s | 132.791 MiB/s |
+| 10 MB | 24,856,164 bytes | 0.181399 s | 130.677 MiB/s |
 
 The transmitted representation is larger than the original file because
 the file package and encrypted envelope use Base64 encoding for
